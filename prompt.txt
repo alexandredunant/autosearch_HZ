@@ -1,0 +1,7 @@
+aider --model ollama/deepseek-r1:32b \
+      --yes-always \
+      --auto-commits \
+      --read program.md \
+      --read prepare.py \
+      train.py \
+      --message "Follow program.md exactly. Determine hazard type from prepare.py, create branch, run setup, then begin the autonomous loop with plateau tracking. Do not ask for confirmation at any step."
