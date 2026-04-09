@@ -2,3 +2,4 @@ autosearch_data/
 __pycache__/
 *.pyc
 *.pyo
+prompt.txt
