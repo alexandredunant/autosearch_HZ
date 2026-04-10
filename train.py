@@ -7,9 +7,7 @@ Edit STATIC_FEATURE_NAMES to add/remove features.
 # ============================================================
 # EDITABLE CONSTANTS – LLM MAY CHANGE THIS SECTION ONLY
 # ============================================================
-STATIC_FEATURE_NAMES: list[str] = [
-    # Add or remove feature names from prepare.static_feature_names
-]
+STATIC_FEATURE_NAMES: list[str] = []
 # ============================================================
 # DO NOT EDIT BELOW THIS LINE
 # ============================================================
