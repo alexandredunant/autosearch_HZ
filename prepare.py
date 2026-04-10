@@ -18,7 +18,7 @@ import pandas as pd
 # ============================================================
 # CONFIGURATION – EDIT THIS FOR YOUR HAZARD
 # ============================================================
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent / "autosearch_data"
 
 HAZARD_TYPE = "landslide"   # used for file naming
 
@@ -47,11 +47,25 @@ VAR_SPECS = {
 def extract_at_points(raster_path, coords):
     with rasterio.open(raster_path) as src:
         rows, cols = rasterio.transform.rowcol(src.transform, coords[:, 0], coords[:, 1])
-        return src.read(1)[rows, cols].astype(np.float32)
+        rows = np.array(rows)
+        cols = np.array(cols)
+        # Handle points that might be slightly outside due to rounding or floating point
+        valid = (rows >= 0) & (rows < src.height) & (cols >= 0) & (cols < src.width)
+        data = np.full(len(coords), np.nan, dtype=np.float32)
+        if valid.any():
+            data[valid] = src.read(1)[rows[valid], cols[valid]].astype(np.float32)
+        return data
 
 def generate_data():
     print(f"Generating data for hazard: {HAZARD_TYPE}")
     gdf = gpd.read_file(EVENT_FILE)
+    
+    # Filter points by bounds of first static raster
+    static_paths = sorted(STATIC_DIR.glob("*.tif"))
+    with rasterio.open(static_paths[0]) as src:
+        bounds = src.bounds
+        gdf = gdf.cx[bounds.left:bounds.right, bounds.bottom:bounds.top]
+    
     gdf["date"] = pd.to_datetime(gdf["date"]).dt.floor('D')
     event_coords = np.column_stack([gdf.geometry.x, gdf.geometry.y])
 
@@ -62,6 +76,7 @@ def generate_data():
     # Support grid from first static raster (non-bias)
     static_paths = sorted(STATIC_DIR.glob("*.tif"))
     bias_path = STATIC_DIR / BIAS_RASTER
+    # Only exclude the bias raster itself from the features
     other_static = [p for p in static_paths if p != bias_path]
 
     with rasterio.open(other_static[0]) as src:
@@ -88,10 +103,13 @@ def generate_data():
     unique_days = np.unique(event_day_idx)
     temporal_series = {}
 
-    xr_event_x = xr.DataArray(event_coords[:, 0], dims='point')
-    xr_event_y = xr.DataArray(event_coords[:, 1], dims='point')
-    xr_sup_x   = xr.DataArray(sup_coords[:, 0],   dims='point')
-    xr_sup_y   = xr.DataArray(sup_coords[:, 1],   dims='point')
+    # Expand support static features to (n_unique_days * n_sup_points, n_static_features)
+    sup_static = np.tile(sup_static, (len(unique_days), 1))
+
+    xr_event_x = xr.DataArray(event_coords[:, 0], dims='event')
+    xr_event_y = xr.DataArray(event_coords[:, 1], dims='event')
+    xr_sup_x   = xr.DataArray(sup_coords[:, 0],   dims='support')
+    xr_sup_y   = xr.DataArray(sup_coords[:, 1],   dims='support')
 
     for var, (subdir, pat, nc_var, agg_func) in VAR_SPECS.items():
         print(f"Processing {var}...")
@@ -112,26 +130,32 @@ def generate_data():
         event_ts_xr = xr.DataArray(event_ts, dims=('time', 'event'), coords={'time': times})
         sup_ts_xr   = xr.DataArray(sup_ts,   dims=('time', 'support'), coords={'time': times})
 
-        rolled_event = event_ts_xr.rolling(time=WINDOW_DAYS, min_periods=1).reduce(agg_func)
-        rolled_sup   = sup_ts_xr.rolling(time=WINDOW_DAYS, min_periods=1).reduce(agg_func)
+        rolled_event = getattr(event_ts_xr.rolling(time=WINDOW_DAYS, min_periods=1), agg_func)()
+        rolled_sup   = getattr(sup_ts_xr.rolling(time=WINDOW_DAYS, min_periods=1), agg_func)()
 
-        event_agg_vals = []
-        for day in event_day_idx:
-            idx = day_to_idx.get(day - 1)
-            if idx is not None:
-                event_agg_vals.append(rolled_event.isel(time=idx).values)
-            else:
-                event_agg_vals.append(np.full(len(event_coords), np.nan))
+        # Vectorized extraction for events
+        time_idxs = [day_to_idx.get(day - 1, -1) for day in event_day_idx]
+        mask = np.array(time_idxs) != -1
+        event_agg = np.zeros(len(event_day_idx), dtype=np.float32)
+        valid_time_idxs = np.array(time_idxs)[mask]
+        valid_event_idxs = np.where(mask)[0]
+        
+        if len(valid_time_idxs) > 0:
+            selected = rolled_event.isel(
+                time=xr.DataArray(valid_time_idxs, dims='z'),
+                event=xr.DataArray(valid_event_idxs, dims='z')
+            )
+            event_agg[mask] = selected.values
+
+        # Extraction for support points (all points for each unique day)
         sup_agg_vals = []
         for day in unique_days:
             idx = day_to_idx.get(day - 1)
             if idx is not None:
                 sup_agg_vals.append(rolled_sup.isel(time=idx).values)
             else:
-                sup_agg_vals.append(np.full(len(sup_coords), np.nan))
-
-        event_agg = np.nan_to_num(np.array(event_agg_vals), nan=0.0).astype(np.float32)
-        sup_agg   = np.nan_to_num(np.array(sup_agg_vals), nan=0.0).astype(np.float32)
+                sup_agg_vals.append(np.full(len(sup_coords), 0.0))
+        sup_agg = np.array(sup_agg_vals).astype(np.float32).flatten()
 
         event_static = np.column_stack([event_static, event_agg])
         sup_static   = np.column_stack([sup_static, sup_agg.reshape(-1, 1)])
@@ -212,12 +236,15 @@ def build_point_process_splits(selected_static, selected_temporal_feats=None, va
     e_static = event_static[:, static_idx]
     s_static = support_static[:, static_idx]
 
+    n_days = len(unique_day_index)
+    n_sup = len(s_static) // n_days
+    
     e_x = e_static
-    s_x = s_static.reshape(len(unique_day_index), -1, len(selected_static))
+    s_x = s_static.reshape(n_days, n_sup, len(selected_static))
 
     # Standardize
     train_e = e_x[train_mask]
-    train_s = s_x.reshape(-1, s_x.shape[-1])
+    train_s = s_x.reshape(s_x.shape[0] * s_x.shape[1], s_x.shape[2])
     fit_x = np.vstack([train_e, train_s])
     mu = np.nanmean(fit_x, axis=0)
     sd = np.nanstd(fit_x, axis=0)

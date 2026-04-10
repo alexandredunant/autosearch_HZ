@@ -24,15 +24,15 @@ OUTPUT_DIR = Path("output")
 SUMMARY_PATH = Path("latest_model_summary.txt")
 
 def train():
-    for name in STATIC_FEATURE_NAMES:
-        if name not in ALL_STATIC:
-            print(f"Error: '{name}' not in available static features.", file=sys.stderr)
-            sys.exit(1)
-
     train_split, val_split, feature_names, mu, sd = build_point_process_splits(
         selected_static=STATIC_FEATURE_NAMES,
         val_fold=3
     )
+
+    for name in STATIC_FEATURE_NAMES:
+        if name not in feature_names:
+            print(f"Error: '{name}' not in available static features.", file=sys.stderr)
+            sys.exit(1)
 
     def neg_log_posterior(beta):
         log_prior = 0.5 * np.sum(beta ** 2)
