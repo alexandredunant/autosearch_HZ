@@ -5,3 +5,4 @@ __pycache__/
 prompt.txt
 .aider*
 results.tsv
+.claude/
