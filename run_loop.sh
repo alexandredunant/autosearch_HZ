@@ -53,13 +53,12 @@ while [ $PLATEAU_COUNT -lt $MAX_PLATEAU ]; do
           train.py \
           --message "According to program.md, perform exactly ONE change (add or remove) to STATIC_FEATURE_NAMES in train.py. 
           CRITICAL: Do not repeat any feature combination already listed in results.tsv. 
-          Current features are: [$OLD_FEATURES]. 
+          Current features are: $OLD_FEATURES. 
           Check the 'features' column in results.tsv to see what has been tried. 
           Do not include shell commands in your answer, only the code change."
 
     # Get NEW features for logging and duplicate checking
-    NEW_FEATURES_LIST=$(python loop_state.py current-features)
-    NEW_FEATURES="[$NEW_FEATURES_LIST]"
+    NEW_FEATURES=$(python loop_state.py current-features)
     EXPERIMENT_COMMIT_HASH=$(git rev-parse --short HEAD)
     EXPERIMENT_DESCRIPTION=$(git log -1 --pretty=%B | tr '\n' ' ' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     
@@ -103,6 +102,7 @@ while [ $PLATEAU_COUNT -lt $MAX_PLATEAU ]; do
             else
                 echo "No improvement."
                 STATUS="discard"
+                # results.tsv is now untracked, so we can safely reset to clean HEAD
                 git reset --hard HEAD~1
                 PLATEAU_COUNT=$((PLATEAU_COUNT + 1))
             fi
