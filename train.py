@@ -7,7 +7,7 @@ Edit STATIC_FEATURE_NAMES to add/remove features.
 # ============================================================
 # EDITABLE CONSTANTS – LLM MAY CHANGE THIS SECTION ONLY
 # ============================================================
-STATIC_FEATURE_NAMES: list[str] = []
+STATIC_FEATURE_NAMES: list[str] = ["elevation"]
 # ============================================================
 # DO NOT EDIT BELOW THIS LINE
 # ============================================================
