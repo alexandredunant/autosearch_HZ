@@ -24,7 +24,7 @@ SUMMARY_PATH = Path("latest_model_summary.txt")
 def train():
     train_split, val_split, feature_names, mu, sd = build_point_process_splits(
         selected_static=STATIC_FEATURE_NAMES,
-        val_fold=3
+        val_fold=2
     )
 
     for name in STATIC_FEATURE_NAMES:
