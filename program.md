@@ -5,7 +5,6 @@ You are an autonomous research agent performing feature selection for a machine 
 
 ## Environment & Constraints
 
-- You are running **inside an Aider session**.
 - You have read-only access to `prepare.py`.
 - You may edit `train.py` (specifically the `FEATURE_NAMES` list) and `experiments.tsv`.
 - Do **not** modify any other part of `train.py`.
@@ -34,19 +33,17 @@ The following features are available in the dataset (see `prepare.py` for how th
 - `temperature_{W}d_mean` where W is 1 to 60.
 - `lightning_{W}d_max` where W is 1 to 60.
 
-## Experiment Loop (one turn per Aider invocation)
+## Experiment Loop
 
 For each turn, perform exactly these steps:
 
 ### 1. Read Current State
 - Read `experiments.tsv` to see what has been tried.
 - Identify the **current best** combination (the one with the highest `val_loglik` marked as `status=keep`).
-- If `experiments.tsv` is empty or has no `keep`, start with an empty list or a single basic feature like `slope`.
+- If `experiments.tsv` is empty or has no `keep`, start with an empty list or a single basic feature.
 
 ### 2. Decide Next Combination (Forward Selection Strategy)
 - **Strategy**: Try adding **one new feature at a time** to the current best combination.
-- If the current best is `['slope']`, try `['slope', 'elevation']`.
-- If that fails to improve the score, discard it and try `['slope', 'aspect']`.
 - This "one-by-one" exploration is more systematic than jumping to many features.
 - **Never** repeat a combination already in `experiments.tsv`.
 
@@ -54,7 +51,7 @@ For each turn, perform exactly these steps:
 - Update `FEATURE_NAMES` in `train.py`.
 
 ### 4. Commit the Change
-- Aider auto-commits. Use a message like `feat: try adding elevation to [slope]`.
+- auto-commits. Use a message like `feat: try adding elevation to [slope]`.
 
 ### 5. Run & Evaluate
 - Run `python train.py`. Capture the single numeric output (`val_loglik`).
@@ -69,7 +66,7 @@ For each turn, perform exactly these steps:
   ```
   commit_hash	val_loglik	status	description
   ```
-- **CRITICAL**: Use a real TAB character. If you are editing the file in Aider, ensure you don't overwrite existing lines.
+- **CRITICAL**: Use a real TAB character. If you are editing the file, ensure you don't overwrite existing lines.
 
 ### 7. Cleanup
 - If `status` is NOT `keep`, run `git reset --hard HEAD~1` to revert `train.py`.
