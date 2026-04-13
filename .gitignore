@@ -4,8 +4,6 @@ __pycache__/
 *.pyo
 prompt.txt
 .aider*
-experiments.tsv
 .autoresearch_done
 .claude/
 .aider.chat.history.md
-run_loop.sh
