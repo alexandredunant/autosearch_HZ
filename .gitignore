@@ -4,7 +4,7 @@ __pycache__/
 *.pyo
 prompt.txt
 .aider*
-experiments.tsv
+!experiments.tsv
 .autoresearch_done
 .claude/
 .aider.chat.history.md
