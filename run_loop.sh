@@ -14,6 +14,9 @@ echo "=== Starting autonomous research loop ==="
 echo "Press Ctrl+C to stop manually (the LLM will otherwise stop when plateau is reached)."
 echo
 
+# Ensure experiments.tsv exists (creates empty file if missing)
+touch experiments.tsv
+
 while [ ! -f .autoresearch_done ]; do
   echo "--- Launching Aider for one experiment turn ---"
   aider --model ollama/deepseek-r1:32b \
@@ -22,7 +25,6 @@ while [ ! -f .autoresearch_done ]; do
     --aiderignore .aiderignore \
     --read program.md \
     --read prepare.py \
-    --read experiments.tsv \
     train.py \
     experiments.tsv \
     --message "Perform exactly ONE autonomous experiment turn by following the protocol in program.md. Do not deviate."
