@@ -5,9 +5,14 @@ export OLLAMA_API_BASE="http://localhost:11434"
 
 rm -f .autoresearch_done
 
-# Ensure experiments.tsv exists with proper header
+# --- Fix header and newline ---
 if [[ ! -f experiments.tsv ]]; then
     printf "commit_hash\tval_loglik\tstatus\tdescription\n" > experiments.tsv
+else
+    # Ensure file ends with newline (if not empty)
+    if [[ -s experiments.tsv ]]; then
+        tail -c1 experiments.tsv | grep -q $'\n' || echo "" >> experiments.tsv
+    fi
 fi
 
 # Track best score
