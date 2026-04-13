@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-import re, subprocess, sys
+import os, re, subprocess, sys
 import numpy as np
 from pathlib import Path
+
+os.environ["OLLAMA_API_BASE"] = "http://localhost:11434"
 
 TRAIN_PY    = Path("train.py")
 EXPERIMENTS = Path("experiments.tsv")
@@ -46,6 +48,7 @@ while not DONE_FLAG.exists():
     subprocess.run([
         "aider", "--model", "ollama/deepseek-r1:32b",
         "--no-gitignore", "--yes-always", "--auto-commits",
+        "--no-show-model-warnings",
         "--aiderignore", ".aiderignore",
         "--read", "program.md",
         "--read", str(EXPERIMENTS),
