@@ -35,7 +35,7 @@ while [[ ! -f .autoresearch_done ]]; do
     PROMPT="Edit FEATURE_NAMES in train.py to try a new feature combination. 
 Current line: '$CURRENT_LINE'
 Features already tried (from experiments.tsv): ${TRIED_SUMMARY:-none}
-Add exactly ONE new static feature (e.g., 'aspect', 'eastness', 'northness', 'tri', 'distroads', etc.) to the list. Do NOT add features that have already been tried unless all have been tried. Do not edit any other file. Do not run commands."
+Add exactly ONE new feature (e.g., one raster) to the list. Do NOT add features that have already been tried unless all have been tried. Do not edit any other file. Do not run commands."
 
     aider --model ollama/deepseek-r1:32b \
         --no-gitignore \
