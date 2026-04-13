@@ -7,7 +7,7 @@ Edit FEATURE_NAMES to add/remove features.
 # ============================================================
 # EDITABLE CONSTANTS – LLM MAY CHANGE THIS SECTION ONLY
 # ============================================================
-FEATURE_NAMES: list[str] = ['slope', 'elevation']
+FEATURE_NAMES: list[str] = ['slope', 'elevation', 'distroads']
 # ============================================================
 # DO NOT EDIT BELOW THIS LINE
 # ============================================================
