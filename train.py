@@ -7,7 +7,7 @@ Edit FEATURE_NAMES to add/remove features.
 # ============================================================
 # EDITABLE CONSTANTS – LLM MAY CHANGE THIS SECTION ONLY
 # ============================================================
-FEATURE_NAMES: list[str] = ['slope', 'elevation', 'distroads', 'flammability', 'northness', 'treecoverdensity', 'tri', 'walking_time_to_road', 'precipitation_1d_sum', 'precipitation_2d_sum', 'walking_time_to_bldg', 'walking_time_to_elec_infra', 'precipitation_3d_sum', 'precipitation_4d_sum', 'precipitation_5d_sum', 'precipitation_6d_sum', 'precipitation_7d_sum', 'precipitation_8d_sum']
+FEATURE_NAMES: list[str] = ['slope', 'elevation', 'distroads', 'flammability', 'northness', 'treecoverdensity', 'tri', 'walking_time_to_road', 'precipitation_1d_sum', 'precipitation_2d_sum', 'walking_time_to_bldg', 'walking_time_to_elec_infra', 'precipitation_3d_sum', 'precipitation_4d_sum', 'precipitation_5d_sum', 'precipitation_6d_sum', 'precipitation_7d_sum', 'precipitation_8d_sum', 'precipitation_9d_sum']
 # ============================================================
 # DO NOT EDIT BELOW THIS LINE
 # ============================================================
