@@ -78,9 +78,3 @@ For each turn, perform exactly these steps:
 - If 20 consecutive experiments fail to improve the best score, stop.
 - To stop: `touch .autoresearch_done`.
 
-## Example Strategy
-1. Start: `[]` -> `val_loglik = -0.69` (Baseline)
-2. Try `['slope']` -> `-0.65` (Better! Status: `keep`)
-3. Try `['slope', 'elevation']` -> `-0.66` (Worse. Status: `discard`. Reset to `['slope']`)
-4. Try `['slope', 'distroads']` -> `-0.64` (Better! Status: `keep`)
-5. Continue...
