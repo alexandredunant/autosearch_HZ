@@ -13,6 +13,7 @@ PLATEAU_COUNT=$(python loop_state.py plateau)
 
 if [ "$MODE" = "--sync-only" ]; then
     echo "Sync complete."
+    
     if [ -z "$BEST_LOGLIK" ]; then
         echo "Best val_loglik: none yet"
     else

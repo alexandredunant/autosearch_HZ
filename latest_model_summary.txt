@@ -1,4 +1,0 @@
-=== MODEL SUMMARY ===
-val_loglik: -7936.3920
-
-Coefficients:
