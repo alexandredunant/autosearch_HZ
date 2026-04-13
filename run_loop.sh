@@ -22,6 +22,7 @@ while [ ! -f .autoresearch_done ]; do
     --aiderignore .aiderignore \
     --read program.md \
     --read prepare.py \
+    --read experiment.tsv \
     train.py \
     experiments.tsv \
     --message "Perform exactly ONE autonomous experiment turn by following the protocol in program.md. Do not deviate."
