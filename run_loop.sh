@@ -19,6 +19,7 @@ while [ ! -f .autoresearch_done ]; do
   aider --model ollama/deepseek-r1:32b \
     --yes-always \
     --auto-commits \
+    --aiderignore .aiderignore \
     --read program.md \
     --read prepare.py \
     train.py \
