@@ -21,9 +21,9 @@ while [ ! -f .autoresearch_done ]; do
     --auto-commits \
     --read program.md \
     --read prepare.py \
-    --read experiments.tsv \
     train.py \
-    --message "Read program.md and experiments.tsv, then perform exactly one autonomous experiment according to program.md. When the stopping condition is met, run: touch .autoresearch_done"
+    experiments.tsv \
+    --message "Perform exactly ONE autonomous experiment turn by following the protocol in program.md. Do not deviate."
   echo "--- Aider turn finished ---"
   echo
 done

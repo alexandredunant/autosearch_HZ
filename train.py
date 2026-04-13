@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
 Hazard-agnostic point-process model using Explainable Boosting Machine (EBM).
-Edit STATIC_FEATURE_NAMES to add/remove features.
+Edit FEATURE_NAMES to add/remove features.
 """
 
 # ============================================================
 # EDITABLE CONSTANTS – LLM MAY CHANGE THIS SECTION ONLY
 # ============================================================
-STATIC_FEATURE_NAMES: list[str] = []
+FEATURE_NAMES: list[str] = []
 # ============================================================
 # DO NOT EDIT BELOW THIS LINE
 # ============================================================
@@ -25,13 +25,13 @@ HAZARD_TYPE = "landslide"
 DATA_FILE = ROOT / f"prepared_clean_{HAZARD_TYPE}_ebm.npz"
 
 def load_and_filter_features():
-    """Load NPZ and select only the features listed in STATIC_FEATURE_NAMES."""
+    """Load NPZ and select only the features listed in FEATURE_NAMES."""
     data = np.load(DATA_FILE, allow_pickle=True)
     X_full = data['X']
     y = data['y']
     all_feature_names = data['feature_names'].tolist()
 
-    if not STATIC_FEATURE_NAMES:
+    if not FEATURE_NAMES:
         # If no features selected, use all static features (fallback)
         # For a true baseline, you could return an empty X, but we'll use all.
         selected_idx = list(range(len(all_feature_names)))
@@ -39,7 +39,7 @@ def load_and_filter_features():
     else:
         selected_idx = []
         selected_names = []
-        for name in STATIC_FEATURE_NAMES:
+        for name in FEATURE_NAMES:
             if name not in all_feature_names:
                 print(f"Error: Feature '{name}' not found in data.", file=sys.stderr)
                 sys.exit(1)
