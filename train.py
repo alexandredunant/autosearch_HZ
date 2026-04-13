@@ -7,7 +7,7 @@ Edit FEATURE_NAMES to add/remove features.
 # ============================================================
 # EDITABLE CONSTANTS – LLM MAY CHANGE THIS SECTION ONLY
 # ============================================================
-FEATURE_NAMES: list[str] = ['slope', 'elevation', 'distroads', 'flammability', 'northness', 'treecoverdensity', 'tri', 'walking_time_to_road', 'precipitation_1d_sum', 'precipitation_2d_sum']
+FEATURE_NAMES: list[str] = ['slope', 'elevation', 'distroads', 'flammability', 'northness', 'treecoverdensity', 'tri', 'walking_time_to_road', 'precipitation_1d_sum', 'precipitation_2d_sum', 'walking_time_to_bldg']
 # ============================================================
 # DO NOT EDIT BELOW THIS LINE
 # ============================================================
