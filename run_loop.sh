@@ -3,10 +3,9 @@ set -euo pipefail
 
 export OLLAMA_API_BASE="http://localhost:11434"
 
-# Clean up old stop marker
 rm -f .autoresearch_done
 
-# Ensure experiments.tsv exists with a proper header
+# Ensure experiments.tsv exists with proper header
 if [[ ! -f experiments.tsv ]]; then
     printf "commit_hash\tval_loglik\tstatus\tdescription\n" > experiments.tsv
 fi
@@ -22,7 +21,7 @@ echo "=== Starting autonomous research loop ==="
 while [[ ! -f .autoresearch_done ]]; do
     echo "--- Asking LLM to propose next feature set ---"
 
-    # Step 1: LLM edits train.py (FEATURE_NAMES only)
+    # LLM edits train.py (FEATURE_NAMES only)
     aider --model ollama/deepseek-r1:32b \
         --no-gitignore \
         --yes-always \
@@ -37,7 +36,7 @@ while [[ ! -f .autoresearch_done ]]; do
 
     echo "--- Running experiment... ---"
 
-    # Step 2: Run train.py and capture val_loglik
+    # Run training and capture score
     VAL_LOG=$(python train.py 2>&1 | tail -n 1)
     echo "val_loglik = $VAL_LOG"
 
@@ -45,40 +44,22 @@ while [[ ! -f .autoresearch_done ]]; do
     BEST_SCORE=$(cat "$BEST_SCORE_FILE")
     FEATURE_LIST=$(grep '^FEATURE_NAMES' train.py | sed "s/.*=\s*//")
 
-    # Step 3: Ask LLM to decide keep/discard
-    DECISION=$(aider --model ollama/deepseek-r1:32b \
-        --no-gitignore \
-        --yes-always \
-        --message "The experiment with features $FEATURE_LIST achieved val_loglik = $VAL_LOG. The current best score is $BEST_SCORE. Based on the protocol in program.md, should this experiment be 'keep' or 'discard'? Respond with exactly one word: keep or discard." \
-        --dry-run 2>&1 | grep -iE "^(keep|discard)$" | head -n 1 | tr '[:upper:]' '[:lower:]')
-
-    # Fallback if LLM doesn't respond cleanly
-    if [[ -z "$DECISION" ]]; then
-        # Default to numeric comparison as fallback
-        if (( $(echo "$VAL_LOG > $BEST_SCORE" | bc -l) )); then
-            DECISION="keep"
-        else
-            DECISION="discard"
-        fi
-        echo "LLM decision unclear; using numeric fallback: $DECISION"
-    else
-        echo "LLM decision: $DECISION"
-    fi
-
-    # Step 4: Record result and handle git
-    if [[ "$DECISION" == "keep" ]]; then
+    # Deterministic decision per protocol
+    if (( $(echo "$VAL_LOG > $BEST_SCORE" | bc -l) )); then
         STATUS="keep"
         echo "$VAL_LOG" > "$BEST_SCORE_FILE"
-        echo "New best score: $VAL_LOG"
+        echo "✅ New best score: $VAL_LOG"
     else
         STATUS="discard"
-        # Revert the commit (undo FEATURE_NAMES change)
         git reset --hard HEAD~1
-        echo "Reverted train.py to previous best."
+        echo "❌ No improvement. Reverted train.py."
     fi
 
-    # Append to experiments.tsv with a real tab
+    # Append to experiments.tsv
     printf "%s\t%s\t%s\t%s\n" "$COMMIT_HASH" "$VAL_LOG" "$STATUS" "$FEATURE_LIST" >> experiments.tsv
+
+    # Optional stopping condition: 20 consecutive discards
+    # (You can implement later if needed)
 
     echo "--- Turn complete ---"
     echo
