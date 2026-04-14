@@ -94,7 +94,7 @@ def experiment_history() -> list[dict]:
         rows.append({
             "experiment": len(rows) + 1,
             "commit": cols[0],
-            "val_loglik": float(cols[1]),
+            "val_pr_auc": float(cols[1]),
             "status": cols[2],
             "features": cols[3],
             "rationale": cols[4] if len(cols) > 4 else "",
@@ -255,7 +255,7 @@ def build_prompt(cur_feats: list[str], remaining: list[str],
     # Recent history summary (last 10)
     recent = history[-10:] if history else []
     history_block = "\n".join(
-        f"  #{e['experiment']}: {e['status']} val_loglik={e['val_loglik']} "
+        f"  #{e['experiment']}: {e['status']} val_pr_auc={e['val_pr_auc']} "
         f"({e['rationale']})"
         for e in recent
     )
@@ -337,7 +337,7 @@ def main():
     DONE_FLAG.unlink(missing_ok=True)
     if not EXPERIMENTS.exists():
         EXPERIMENTS.write_text(
-            "commit_hash\tval_loglik\tstatus\tfeatures\trationale\n"
+            "commit_hash\tval_pr_auc\tstatus\tfeatures\trationale\n"
         )
 
     consec_fail = 0
@@ -363,7 +363,7 @@ def main():
         # Phase 1: Query GeoEvolve for literature context
         print("  [1/4] Querying literature (GeoEvolve)...")
         history_summary = "; ".join(
-            f"{e['status']}({e['val_loglik']})" for e in history[-5:]
+            f"{e['status']}({e['val_pr_auc']})" for e in history[-5:]
         )
         literature = query_geoevolve(cur, history_summary)
         if literature:
@@ -404,12 +404,12 @@ def main():
             rationale = "crash"
             feats_str = str(current_features())
         else:
-            val = train_result["val_loglik"]
+            val = train_result["val_pr_auc"]
             rationale = train_result.get("rationale", "")
             feats_str = str(train_result["features"])
 
         best = best_score()
-        print(f"  val_loglik={val}  best={best}")
+        print(f"  val_pr_auc={val}  best={best}")
 
         # Decision
         if val is None:

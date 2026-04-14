@@ -43,7 +43,7 @@ import pickle
 import numpy as np
 from pathlib import Path
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import log_loss
+from sklearn.metrics import average_precision_score
 from interpret.glassbox import ExplainableBoostingClassifier
 
 ROOT = Path(__file__).resolve().parent / "autosearch_data"
@@ -111,7 +111,7 @@ def main():
 
     # 4. Evaluate
     y_pred_proba = ebm.predict_proba(X_val)[:, 1]
-    val_loglik = -log_loss(y_val, y_pred_proba, labels=[0, 1])
+    val_pr_auc = average_precision_score(y_val, y_pred_proba)
 
     # 5. Feature importances (EBM term importances)
     importances = {}
@@ -125,7 +125,7 @@ def main():
 
     # 7. Output structured JSON
     output = {
-        "val_loglik": round(val_loglik, 6),
+        "val_pr_auc": round(val_pr_auc, 6),
         "n_features": len(feature_names),
         "features": feature_names,
         "importances": importances,

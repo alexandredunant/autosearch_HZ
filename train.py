@@ -16,7 +16,7 @@ import sys
 import numpy as np
 from pathlib import Path
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import log_loss
+from sklearn.metrics import average_precision_score
 from interpret.glassbox import ExplainableBoostingClassifier
 
 # Load data
@@ -89,10 +89,10 @@ def main():
 
     # 4. Evaluate on validation set
     y_pred_proba = ebm.predict_proba(X_val)[:, 1]  # probability of class 1 (event)
-    val_loglik = -log_loss(y_val, y_pred_proba, labels=[0, 1])
+    val_pr_auc = average_precision_score(y_val, y_pred_proba)
 
     # Output only the numeric value (as required by the loop)
-    print(f"{val_loglik:.6f}")
+    print(f"{val_pr_auc:.6f}")
 
 if __name__ == "__main__":
     main()

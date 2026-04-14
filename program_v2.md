@@ -101,8 +101,8 @@ encouraged to:
 
 ## Scoring
 
-- Output metric: `val_loglik = -log_loss(y_val, y_pred_proba)`
-- **Higher is better** (closer to 0 = better calibration)
+- Output metric: `val_pr_auc = average_precision_score(y_val, y_pred_proba)`
+- **Higher is better** (1.0 = perfect, reflects performance on rare positive events)
 - The loop compares your score to the running best
 - `keep` if score improves, `discard` if not (reverts train_v2.py)
 

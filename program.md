@@ -54,17 +54,17 @@ For each turn, perform exactly these steps:
 - auto-commits. Use a message like `feat: try adding elevation to [slope]`.
 
 ### 5. Run & Evaluate
-- Run `python train.py`. Capture the single numeric output (`val_loglik`).
-- Compare with the best `val_loglik` in `experiments.tsv`.
+- Run `python train.py`. Capture the single numeric output (`val_pr_auc`).
+- Compare with the best `val_pr_auc` in `experiments.tsv`.
 - **Status**:
-  - `keep` if `val_loglik > best_so_far`
-  - `discard` if `val_loglik <= best_so_far`
+  - `keep` if `val_pr_auc > best_so_far`
+  - `discard` if `val_pr_auc <= best_so_far`
   - `crash` if it failed.
 
 ### 6. Record in `experiments.tsv`
 - Append the result to `experiments.tsv`:
   ```
-  commit_hash	val_loglik	status	description
+  commit_hash	val_pr_auc	status	description
   ```
 - **CRITICAL**: Use a real TAB character. If you are editing the file, ensure you don't overwrite existing lines.
 

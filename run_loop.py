@@ -67,7 +67,7 @@ def revert_train_py():
 
 DONE_FLAG.unlink(missing_ok=True)
 if not EXPERIMENTS.exists():
-    EXPERIMENTS.write_text("commit_hash\tval_loglik\tstatus\tdescription\n")
+    EXPERIMENTS.write_text("commit_hash\tval_pr_auc\tstatus\tdescription\n")
 
 consec_fail = 0
 print("=== Starting autonomous research loop ===")
@@ -88,7 +88,7 @@ while not DONE_FLAG.exists():
     )
 
     subprocess.run([
-        "aider", "--model", "ollama/deepseek-r1:32b",
+        "/home/adunant/miniconda3/envs/hazard_agent/bin/aider", "--model", "ollama/deepseek-r1:32b",
         "--no-gitignore", "--yes-always", "--auto-commits",
         "--no-show-model-warnings",
         "--aiderignore", ".aiderignore",
@@ -109,7 +109,7 @@ while not DONE_FLAG.exists():
     ).strip()
     feats = current_features()
     best = best_score()
-    print(f"val_loglik={val}  best={best}  features={feats}")
+    print(f"val_pr_auc={val}  best={best}  features={feats}")
 
     if val is None:
         status = "crash"
