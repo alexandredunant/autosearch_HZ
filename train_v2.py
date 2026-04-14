@@ -133,22 +133,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-L_CONFIG,
-    }
-    print(json.dumps(output))
-
-
-if __name__ == "__main__":
-    main()
-L_CONFIG,
-    }
-    print(json.dumps(output))
-
-
-if __name__ == "__main__":
-    main()
-ut))
-
-
-if __name__ == "__main__":
-    main()
