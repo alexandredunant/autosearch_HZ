@@ -1,0 +1,2 @@
+OLLAMA_API_BASE=http://localhost:11434 aider --model ollama/deepseek-r1:32b --read program_v2.md             
+  --system-prompt-file program_v2.md train_v2.py  

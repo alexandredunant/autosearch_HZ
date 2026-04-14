@@ -52,8 +52,11 @@ GEOEVOLVE_PERSIST = "geoevolve_storage"
 
 # TalkToEBM config
 T2EBM_ENABLED = True
-T2EBM_LLM_MODEL = "gpt-4-turbo-2024-04-09"  # for graph descriptions
 T2EBM_TOP_N = 5  # describe top N features by importance
+
+# Ollama config (used by both TalkToEBM and GeoEvolve)
+OLLAMA_BASE_URL = "http://localhost:11434/v1"
+OLLAMA_MODEL = "deepseek-r1:32b"
 
 MAX_CONSECUTIVE_FAILURES = 20
 
@@ -141,22 +144,49 @@ def query_geoevolve(current_feats: list[str],
     """Query GeoEvolve knowledge base for literature-informed suggestions.
 
     Returns a text block of suggestions to inject into the LLM prompt.
+    Uses local Ollama for both LLM and embeddings.
     """
     if not GEOEVOLVE_ENABLED:
         return None
 
     try:
-        from geoevolve import initialize_or_get_geo_know_db
+        from geoevolve.geo_knowledge_rag import GeoKnowledgeRAG
+        from geoevolve.llm import get_llm
+        from langchain_openai import OpenAIEmbeddings
     except ImportError:
         print("  [GeoEvolve] Not installed, skipping literature check.")
         return None
 
     try:
-        geokg = initialize_or_get_geo_know_db(
-            persist_dir=GEOEVOLVE_PERSIST,
-            embedding_model_name="text-embedding-3-large",
-            llm_model_name="gpt-4.1",
+        # Build RAG with Ollama-backed components
+        geokg = GeoKnowledgeRAG.__new__(GeoKnowledgeRAG)
+        geokg.llm = get_llm(
+            model=OLLAMA_MODEL,
+            base_url=OLLAMA_BASE_URL,
+            api_key="ollama",
+            source="Custom",
         )
+        geokg.embeddings = OpenAIEmbeddings(
+            model=OLLAMA_MODEL,
+            base_url=OLLAMA_BASE_URL,
+            api_key="ollama",
+            check_embedding_ctx_length=False,
+        )
+
+        from langchain_text_splitters import RecursiveCharacterTextSplitter
+        from langchain_chroma import Chroma
+        from langgraph.checkpoint.memory import MemorySaver
+
+        geokg.splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+            chunk_size=300, chunk_overlap=50
+        )
+        geokg.db = Chroma(
+            collection_name="geo_knowledge_db",
+            embedding_function=geokg.embeddings,
+            persist_directory=GEOEVOLVE_PERSIST,
+        )
+        geokg.memory = MemorySaver()
+        geokg.retriever = geokg.db.as_retriever(search_kwargs={"k": 4})
 
         query = (
             f"For landslide susceptibility modeling using EBM "
@@ -181,10 +211,35 @@ def query_geoevolve(current_feats: list[str],
 # ============================================================
 # TalkToEBM — Model understanding via graph descriptions
 # ============================================================
+def _get_t2ebm_ollama_model():
+    """Create an Ollama-backed chat model for t2ebm."""
+    from openai import OpenAI
+    from t2ebm.llm import OpenAIChatModel
+
+    class OllamaChatModel(OpenAIChatModel):
+        """OpenAIChatModel with extended timeout for local inference."""
+        def chat_completion(self, messages, temperature, max_tokens):
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                timeout=600,
+            )
+            try:
+                return response.choices[0].message.content or ""
+            except Exception:
+                return ""
+
+    client = OpenAI(base_url=OLLAMA_BASE_URL, api_key="ollama")
+    return OllamaChatModel(client, OLLAMA_MODEL)
+
+
 def describe_ebm_graphs(top_n: int = T2EBM_TOP_N) -> Optional[str]:
     """Use t2ebm to describe the top-N EBM shape functions.
 
     Returns a text block the LLM can use to understand what the model learned.
+    Uses local Ollama for LLM inference.
     """
     if not T2EBM_ENABLED:
         return None
@@ -203,6 +258,8 @@ def describe_ebm_graphs(top_n: int = T2EBM_TOP_N) -> Optional[str]:
         with open(MODEL_FILE, "rb") as f:
             ebm = pickle.load(f)
 
+        ollama_llm = _get_t2ebm_ollama_model()
+
         # Get feature importances to pick top-N
         global_exp = ebm.explain_global()
         names = global_exp.data()["names"]
@@ -217,21 +274,8 @@ def describe_ebm_graphs(top_n: int = T2EBM_TOP_N) -> Optional[str]:
                 simplified = graphs.simplify_graph(
                     graph, min_variation_per_cent=0.05
                 )
-                graph_text = graphs.graph_to_text(simplified, max_tokens=500)
-                prompt = t2ebm.prompts.describe_graph(
-                    graph_text,
-                    graph_description="log-odds contribution to landslide probability",
-                    dataset_description=(
-                        "Landslide susceptibility dataset with terrain, "
-                        "proximity, land-cover, and precipitation features"
-                    ),
-                    task_description=(
-                        "Describe the relationship this feature has with "
-                        "landslide probability. Note thresholds, non-linearities, "
-                        "and whether the effect is physically plausible."
-                    ),
-                )
-                desc = t2ebm.describe_graph(T2EBM_LLM_MODEL, ebm, idx)
+                graph_text = graphs.graph_to_text(simplified, max_tokens=2000)
+                desc = t2ebm.describe_graph(ollama_llm, ebm, idx)
                 descriptions.append(
                     f"## {name} (importance={importance:.4f})\n{desc}"
                 )
