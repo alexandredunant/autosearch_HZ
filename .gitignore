@@ -5,6 +5,13 @@ __pycache__/
 prompt.txt
 .aider*
 .autoresearch_done
+.best_score.txt
 .claude/
 .aider.chat.history.md
 experiments.tsv
+experiments_v2.tsv
+.best_score_v2.txt
+.last_ebm_model.pkl
+.autoresearch_v2_done
+geoevolve_storage/
+geoevolve_knowledge/
