@@ -15,11 +15,7 @@ Edit FEATURE_NAMES and MODEL_CONFIG to experiment.
 # ============================================================
 # EDITABLE SECTION — LLM MAY CHANGE THIS BLOCK
 # ============================================================
-FEATURE_NAMES: list[str] = [
-    'slope', 'elevation', 'distroads', 'flammability',
-    'northness', 'treecoverdensity', 'tri',
-    'walking_time_to_road', 'precipitation_1d_sum',
-]
+FEATURE_NAMES: list[str] = []
 
 # Model hyperparameters the LLM may tune (must remain EBM)
 MODEL_CONFIG: dict = {
@@ -133,6 +129,25 @@ def main():
         "model_config": MODEL_CONFIG,
     }
     print(json.dumps(output))
+
+
+if __name__ == "__main__":
+    main()
+L_CONFIG,
+    }
+    print(json.dumps(output))
+
+
+if __name__ == "__main__":
+    main()
+L_CONFIG,
+    }
+    print(json.dumps(output))
+
+
+if __name__ == "__main__":
+    main()
+ut))
 
 
 if __name__ == "__main__":
