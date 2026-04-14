@@ -15,39 +15,28 @@ Edit FEATURE_NAMES and MODEL_CONFIG to experiment.
 # ============================================================
 # EDITABLE SECTION — LLM MAY CHANGE THIS BLOCK
 # ============================================================
-FEATURE_NAMES: list[str] = [
-    # Terrain features
-    "slope",
-    "elevation", 
-    "aspect",
-    "tri",
-    
-    # Proximity features
-    "distroads",
-    
-    # Land cover features
-    "landcoverfull", 
-    "treecoverdensity"
-]
+FEATURE_NAMES: list[str] = []
 
 # Model hyperparameters the LLM may tune (must remain EBM)
 MODEL_CONFIG: dict = {
-    "interactions": 10,          # Enable pairwise interactions for better model flexibility
-    "max_bins": 64,
-    "learning_rate": 0.03,
-    "outer_bags": 8,
+    "interactions": 0,          # 0 = main effects only; int > 0 = top-N pairs
+    "max_bins": 256,
+    "learning_rate": 0.01,
+    "outer_bags": 16,
     "validation_size": 0.15,
     "early_stopping_rounds": 50,
 }
 
 # Optional: rationale for this experiment (written by LLM)
 EXPERIMENT_RATIONALE: str = """
-Baseline model using key terrain features:
-- slope, elevation, aspect, tri
-Plus proximity to roads
-And land cover characteristics
-Including interaction terms to capture combined effects
-"""
+Baseline model using key terrain features, proximity, and land cover,
+enhanced with antecedent precipitation dynamics.
+- Terrain: slope, elevation, aspect, tri
+- Proximity: distroads
+- Land cover: landcoverfull, treecoverdensity
+- Dynamic Precipitation: precipitation_7d_sum, precipitation_30d_sum, precipitation_60d_sum
+Including interaction terms to capture combined effects.
+
 # ============================================================
 # DO NOT EDIT BELOW THIS LINE
 # ============================================================
